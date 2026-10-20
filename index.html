@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Школа: Читання та Математика (50-60 завдань)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+
+  <div class="header">
+    <button class="btn-back" id="btnBack" onclick="goBack()">⬅ Головне Меню</button>
+    <div class="score-badge">⭐ <span id="starCounter">0</span></div>
+  </div>
+
+  <div class="container">
+
+    <!-- SCREEN 1: SUBJECT SELECT -->
+    <div id="screenSubjects" class="screen active">
+      <h1 class="title">Обери Предмет! 🚀</h1>
+      <div class="grid-2">
+        <div class="card card-reading" onclick="selectSubject('reading')">
+          <div class="card-icon">📚</div>
+          <div class="card-title">Читання (3 Групи)</div>
+          <div class="card-desc">По 60 завдань у кожній групі!</div>
+        </div>
+        <div class="card card-math" onclick="selectSubject('math')">
+          <div class="card-icon">🔢</div>
+          <div class="card-title">Математика (3 Групи)</div>
+          <div class="card-desc">Фігури, приклади та порівняння (50-60 завдань)!</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 2: READING GROUPS -->
+    <div id="screenReadingGroups" class="screen">
+      <h1 class="title">Обери Групу Читання 📖</h1>
+      <div class="grid-2">
+        <div class="card card-reading" onclick="selectReadingGroup('group1')">
+          <div class="card-icon">🔤</div>
+          <div class="card-title">Група 1: Згадуємо букви</div>
+          <div class="card-desc">60 Завдань</div>
+        </div>
+        <div class="card card-reading" onclick="selectReadingGroup('group2')">
+          <div class="card-icon">🧩</div>
+          <div class="card-title">Група 2: Прості склади</div>
+          <div class="card-desc">60 Завдань</div>
+        </div>
+        <div class="card card-reading" onclick="selectReadingGroup('group3')">
+          <div class="card-icon">📖</div>
+          <div class="card-title">Група 3: Прості слова</div>
+          <div class="card-desc">60 Завдань</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 3: MATH GROUPS -->
+    <div id="screenMathGroups" class="screen">
+      <h1 class="title">Обери Групу Математики 🔢</h1>
+      <div class="grid-2">
+        <div class="card card-math" onclick="selectMathGroup('shapes')">
+          <div class="card-icon">🔺🟢</div>
+          <div class="card-title">Група 1: Приклади з фігурами</div>
+          <div class="card-desc">50 Завдань</div>
+        </div>
+        <div class="card card-math" onclick="selectMathGroup('numbers')">
+          <div class="card-icon">➕➖</div>
+          <div class="card-title">Група 2: Звичайні приклади</div>
+          <div class="card-desc">60 Завдань</div>
+        </div>
+        <div class="card card-math" onclick="selectMathGroup('compare')">
+          <div class="card-icon">⚖️</div>
+          <div class="card-title">Група 3: Порівняй числа</div>
+          <div class="card-desc">60 Завдань (&lt;, &gt;, =)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 4: GAMEPLAY -->
+    <div id="screenGameplay" class="screen">
+      <div class="game-box">
+        <div class="task-counter-badge" id="taskCounterBadge">Завдання 1 з 60</div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="question-title" id="questionText">Завантаження...</div>
+        <div class="interactive-area" id="interactiveArea"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- VICTORY MODAL -->
+  <div class="modal-overlay" id="victoryModal">
+    <div class="modal-card">
+      <div class="modal-title">Перемога! 🎉</div>
+      <div>Ти чудово впорався з усіма завданнями!</div>
+      <div class="modal-stars">⭐⭐⭐</div>
+      <button class="btn-back" style="margin: 0 auto; width: 100%; justify-content: center;" onclick="closeModal()">Продовжити 🚀</button>
+    </div>
+  </div>
+
+  <script>
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playTone(freq, duration) {
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.frequency.value = freq;
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
+        osc.stop(audioCtx.currentTime + duration);
+      } catch(e){}
+    }
+
+    function playSound(type) {
+      if (type === 'correct') {
+        playTone(523.25, 0.15);
+        setTimeout(() => playTone(659.25, 0.2), 100);
+        setTimeout(() => playTone(783.99, 0.3), 200);
+      } else if (type === 'wrong') {
+        playTone(200, 0.2);
+        setTimeout(() => playTone(150, 0.3), 150);
+      } else if (type === 'win') {
+        playTone(400, 0.1);
+        setTimeout(() => playTone(500, 0.1), 100);
+        setTimeout(() => playTone(600, 0.1), 200);
+        setTimeout(() => playTone(800, 0.4), 300);
+      }
+    }
+
+    function speakText(text) {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'uk-UA';
+        utterance.rate = 0.85;
+        window.speechSynthesis.speak(utterance);
+      }
+    }
+
+    // GENERATE LARGE TASK LISTS (50-60 TASKS)
+    function generateTasks(category) {
+      const tasks = [];
+      const letters = ['А', 'О', 'У', 'І', 'Е', 'И', 'Б', 'В', 'Г', 'Д', 'К', 'М', 'Н', 'П', 'Р', 'С', 'Т', 'Л', 'З', 'Ш'];
+      const syllables = ['МА', 'БА', 'ПО', 'ЛУ', 'СА', 'ДО', 'РУ', 'ТА', 'КО', 'НИ', 'ВА', 'РА', 'СУ', 'КИ', 'МІ', 'БУ', 'МО'];
+      const words = ['МАМА', 'КІТ', 'ДІМ', 'ТАТО', 'ЛІС', 'СИР', 'РИБА', 'ВОДА', 'СІК', 'КАША', 'РУКА', 'НОГА', 'МИЛО', 'ЗИМА', 'ЛІТО', 'СОВА', 'М’ЯЧ'];
+      const shapeMap = { '🔺': 3, '🟩': 4, '⭐️': 5, '🟡': 1, '🟥': 2, '🔷': 6, '⬡': 5 };
+
+      const totalCount = category === 'math_shapes' ? 50 : 60;
+
+      for (let i = 1; i <= totalCount; i++) {
+        if (category === 'group1') {
+          const l = letters[(i - 1) % letters.length];
+          tasks.push({
+            q: `${i}. Знайди букву: ${l}`,
+            options: [l, letters[(i + 3) % letters.length], letters[(i + 7) % letters.length]],
+            answer: l,
+            audio: `Буква ${l}`
+          });
+        } else if (category === 'group2') {
+          const syl = syllables[(i - 1) % syllables.length];
+          tasks.push({
+            q: `${i}. Прочитай склад: ${syl}`,
+            options: [syl, syllables[(i + 2) % syllables.length], syllables[(i + 5) % syllables.length]],
+            answer: syl,
+            audio: syl
+          });
+        } else if (category === 'group3') {
+          const w = words[(i - 1) % words.length];
+          tasks.push({
+            q: `${i}. Прочитай слово: ${w}`,
+            options: [w, words[(i + 2) % words.length], words[(i + 4) % words.length]],
+            answer: w,
+            audio: w
+          });
+        } else if (category === 'math_shapes') {
+          const keys = Object.keys(shapeMap);
+          const s1 = keys[i % keys.length];
+          const s2 = keys[(i + 3) % keys.length];
+          const v1 = shapeMap[s1];
+          const v2 = shapeMap[s2];
+          const isPlus = i % 2 === 0;
+          const ans = isPlus ? v1 + v2 : Math.max(v1, v2) - Math.min(v1, v2);
+          const op = isPlus ? '+' : '-';
+          tasks.push({
+            q: `${i}. Обчисли: ${s1} ${op} ${s2} = ?\n(${s1}=${v1}, ${s2}=${v2})`,
+            options: [ans, ans + 1, ans > 0 ? ans - 1 : ans + 2],
+            answer: ans
+          });
+        } else if (category === 'math_numbers') {
+          const a = (i % 7) + 1;
+          const b = ((i * 3) % 6) + 1;
+          const isAdd = i % 2 === 0;
+          const ans = isAdd ? a + b : a;
+          const qText = isAdd ? `${a} + ${b} = ?` : `${a + b} - ${b} = ?`;
+          tasks.push({
+            q: `${i}. Обчисли: ${qText}`,
+            options: [ans, ans + 1, ans > 0 ? ans - 1 : ans + 2],
+            answer: ans
+          });
+        } else if (category === 'math_compare') {
+          const a = (i * 2) % 9 + 1;
+          const b = (i * 5) % 9 + 1;
+          let ans = '=';
+          if (a > b) ans = '>';
+          else if (a < b) ans = '<';
+          tasks.push({
+            q: `${i}. Порівняй числа:\n${a} ... ${b}`,
+            options: ['>', '<', '='],
+            answer: ans
+          });
+        }
+      }
+      return tasks;
+    }
+
+    const gameDatabase = {
+      reading: {
+        group1: { title: "Група 1: Букви (60 завдань)", icon: '🔤', tasks: generateTasks('group1') },
+        group2: { title: "Група 2: Склади (60 завдань)", icon: '🧩', tasks: generateTasks('group2') },
+        group3: { title: "Група 3: Слова (60 завдань)", icon: '📖', tasks: generateTasks('group3') }
+      },
+      math: {
+        shapes: { title: "Група 1: Фігури (50 завдань)", icon: '🔺🟢', tasks: generateTasks('math_shapes') },
+        numbers: { title: "Група 2: Приклади (60 завдань)", icon: '➕➖', tasks: generateTasks('math_numbers') },
+        compare: { title: "Група 3: Порівняння (60 завдань)", icon: '⚖️', tasks: generateTasks('math_compare') }
+      }
+    };
+
+    let currentSubject = null;
+    let currentGameData = null;
+    let currentTaskIdx = 0;
+    let totalStars = 0;
+
+    function showScreen(id) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+
+    function selectSubject(subjKey) {
+      currentSubject = subjKey;
+      if (subjKey === 'reading') {
+        showScreen('screenReadingGroups');
+      } else if (subjKey === 'math') {
+        showScreen('screenMathGroups');
+      }
+    }
+
+    function selectReadingGroup(groupKey) {
+      startGame(gameDatabase.reading[groupKey]);
+    }
+
+    function selectMathGroup(mathKey) {
+      startGame(gameDatabase.math[mathKey]);
+    }
+
+    function startGame(gameObj) {
+      currentGameData = gameObj;
+      currentTaskIdx = 0;
+      loadTask();
+      showScreen('screenGameplay');
+    }
+
+    function goBack() {
+      const screenGameplay = document.getElementById('screenGameplay').classList.contains('active');
+      const screenReadingGroups = document.getElementById('screenReadingGroups').classList.contains('active');
+      const screenMathGroups = document.getElementById('screenMathGroups').classList.contains('active');
+
+      if (screenGameplay) {
+        if (currentSubject === 'reading') showScreen('screenReadingGroups');
+        else if (currentSubject === 'math') showScreen('screenMathGroups');
+      } else if (screenReadingGroups || screenMathGroups) {
+        showScreen('screenSubjects');
+      }
+    }
+
+    function loadTask() {
+      const task = currentGameData.tasks[currentTaskIdx];
+      const total = currentGameData.tasks.length;
+
+      document.getElementById('taskCounterBadge').innerText = `Завдання ${currentTaskIdx + 1} з ${total}`;
+      document.getElementById('progressFill').style.width = `${((currentTaskIdx + 1) / total) * 100}%`;
+      document.getElementById('questionText').innerText = task.q;
+
+      const area = document.getElementById('interactiveArea');
+      area.innerHTML = '';
+
+      if (task.audio) {
+        const audioBtn = document.createElement('button');
+        audioBtn.className = 'btn-audio';
+        audioBtn.innerHTML = `🔊 Прослухати`;
+        audioBtn.onclick = () => speakText(task.audio);
+        area.appendChild(audioBtn);
+        speakText(task.audio);
+      }
+
+      const optionsGrid = document.createElement('div');
+      optionsGrid.className = 'options-grid';
+
+      // Shuffle options slightly or render them directly
+      task.options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'btn-option';
+        btn.innerText = opt;
+        btn.onclick = () => checkAnswer(opt, task.answer);
+        optionsGrid.appendChild(btn);
+      });
+
+      area.appendChild(optionsGrid);
+    }
+
+    function checkAnswer(selected, correct) {
+      if (selected == correct) {
+        playSound('correct');
+        currentTaskIdx++;
+
+        if (currentTaskIdx < currentGameData.tasks.length) {
+          loadTask();
+        } else {
+          playSound('win');
+          totalStars += 10;
+          document.getElementById('starCounter').innerText = totalStars;
+          document.getElementById('victoryModal').classList.add('active');
+        }
+      } else {
+        playSound('wrong');
+      }
+    }
+
+    function closeModal() {
+      document.getElementById('victoryModal').classList.remove('active');
+      if (currentSubject === 'reading') showScreen('screenReadingGroups');
+      else if (currentSubject === 'math') showScreen('screenMathGroups');
+    }
+  </script>
+</body>
+</html>
